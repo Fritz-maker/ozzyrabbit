@@ -1,0 +1,335 @@
+/* Ozzyrabbit - Profound Documentary Aesthetic with GEB Symbolism */
+
+/* --- Typography --- */
+/* Using Google Fonts - you can add these to your HTML <head> if you want to preload,
+   or the browser will fetch them. */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Source+Serif+Pro:wght@400;700&display=swap');
+
+/* --- Colors (Inspired by Sepia Tones, Parchment, Archive Gold) --- */
+:root {
+    --color-background-dark: hsl(30, 10%, 15%); /* Deep Sepia Black */
+    --color-background-light: hsl(40, 15%, 95%); /* Parchment White */
+    --color-text-primary: hsl(30, 5%, 85%);    /* Soft Off-White for dark bg */
+    --color-text-secondary: hsl(40, 8%, 60%);  /* Muted Gray for sub-text */
+    --color-accent-gold: hsl(45, 70%, 55%);    /* Archive Gold */
+    --color-border-subtle: hsl(30, 8%, 30%);   /* Darker sepia for borders */
+    --color-button-primary: hsl(45, 60%, 40%); /* Muted Gold Button */
+    --color-button-hover: hsl(45, 70%, 50%);   /* Brighter Gold on hover */
+    --color-button-secondary: hsl(220, 15%, 30%); /* Dark Blue-Gray for secondary */
+    --color-button-secondary-hover: hsl(220, 15%, 40%);
+    --color-error: hsl(0, 70%, 50%);         /* Subtle red for errors */
+
+    /* GEB Symbolism: Golden Ratio */
+    --golden-ratio: 1.618;
+    --spacing-unit: 1rem; /* Base spacing unit */
+    --spacing-sm: calc(var(--spacing-unit) / var(--golden-ratio)); /* ~0.618rem */
+    --spacing-md: var(--spacing-unit); /* 1rem */
+    --spacing-lg: calc(var(--spacing-unit) * var(--golden-ratio)); /* ~1.618rem */
+    --spacing-xl: calc(var(--spacing-unit) * var(--golden-ratio) * var(--golden-ratio)); /* ~2.618rem */
+}
+
+/* --- Base Styles --- */
+body {
+    font-family: 'Source Serif Pro', serif; /* Primary font for narrative text */
+    line-height: 1.6;
+    margin: 0;
+    padding: var(--spacing-xl);
+    background-color: var(--color-background-dark);
+    color: var(--color-text-primary);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    position: relative; /* For the grid overlay */
+}
+
+/* GEB: Subtle Grid Overlay (Escher-inspired geometric precision) */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(to right, var(--color-border-subtle) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--color-border-subtle) 1px, transparent 1px);
+    background-size: 50px 50px; /* Adjust grid density */
+    opacity: 0.05; /* Very subtle */
+    pointer-events: none; /* Allow clicks through */
+    z-index: -1;
+}
+
+
+header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    background-color: rgba(255, 255, 255, 0.05); /* Semi-transparent overlay for header */
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-radius: var(--spacing-md);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border: 1px solid var(--color-border-subtle);
+}
+
+h1 {
+    font-family: 'IBM Plex Mono', monospace; /* Monospaced for a structured, analytical feel */
+    color: var(--color-accent-gold);
+    margin-bottom: var(--spacing-sm);
+    font-size: calc(2 * var(--spacing-lg)); /* Larger for emphasis */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--color-text-primary);
+    margin-top: 0;
+    font-size: calc(1.5 * var(--spacing-md));
+}
+
+p {
+    font-size: var(--spacing-md);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+main {
+    flex-grow: 1;
+    max-width: calc(800px * var(--golden-ratio)); /* Apply golden ratio to max width */
+    margin: 0 auto;
+    width: 100%;
+    padding: var(--spacing-xl) 0;
+}
+
+/* Preference Selection */
+#preference-selection {
+    background-color: rgba(255, 255, 255, 0.07); /* Slightly lighter background */
+    border: 1px solid var(--color-border-subtle);
+    padding: var(--spacing-xl);
+    border-radius: var(--spacing-md);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+#preference-selection button {
+    background-color: var(--color-button-primary);
+    color: var(--color-background-dark); /* Text color from dark background */
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    margin: var(--spacing-md);
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+#preference-selection button:hover {
+    background-color: var(--color-button-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+/* Content Display Area */
+#content-area {
+    background-color: rgba(255, 255, 255, 0.07);
+    padding: var(--spacing-xl);
+    border-radius: var(--spacing-md);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    margin-bottom: var(--spacing-xl);
+    border: 1px solid var(--color-border-subtle);
+}
+
+#content-display {
+    min-height: 150px; /* More space for narrative */
+    font-size: var(--spacing-lg); /* Larger text for readability */
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border: 1px dashed var(--color-border-subtle);
+    border-radius: 5px;
+    background-color: rgba(0,0,0,0.1); /* Slightly darker content box */
+    color: var(--color-text-primary);
+}
+
+#house-commentary {
+    min-height: 80px; /* More space for commentary */
+    font-style: italic;
+    color: var(--color-text-secondary);
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--color-border-subtle);
+    margin-top: var(--spacing-md);
+    font-family: 'Source Serif Pro', serif; /* Keep narrative font */
+    font-size: var(--spacing-md);
+    line-height: 1.5;
+}
+
+.placeholder-text {
+    color: var(--color-text-secondary);
+}
+
+/* Glitch Text - Removed for general use, applied only where needed conceptually */
+.glitch-text {
+    /* If you want a subtle glitch for certain philosophical statements, use this class directly in HTML */
+    font-family: 'IBM Plex Mono', monospace;
+    /* Removed heavy glitch animation for a cleaner look */
+    /* Only apply very subtle text-shadow for a 'digital artifact' feel */
+    text-shadow: 0 0 2px var(--color-text-primary), 0 0 5px var(--color-accent-gold);
+}
+
+
+/* Controls and Score */
+#controls-and-score {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+#next-button {
+    background-color: var(--color-button-primary);
+    color: var(--color-background-dark);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    margin-bottom: var(--spacing-md);
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+#next-button:hover {
+    background-color: var(--color-button-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+#current-score {
+    font-size: var(--spacing-xl);
+    font-weight: bold;
+    color: var(--color-accent-gold);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-subtle);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--spacing-sm);
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.5px;
+}
+
+/* New Elements for Progress and Unlock Status */
+#progress-indicator {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    font-size: 0.9em;
+}
+
+#progress-indicator #current-loop {
+    color: var(--color-accent-gold);
+    font-weight: bold;
+}
+
+#unlock-status {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--color-border-subtle);
+    padding: var(--spacing-xl);
+    border-radius: var(--spacing-md);
+    text-align: center;
+    margin-top: var(--spacing-xl);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    margin-bottom: var(--spacing-xl); /* Add margin for spacing */
+}
+
+#unlock-status h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: calc(1.5 * var(--spacing-md));
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#unlock-status p {
+    font-size: var(--spacing-md);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-md);
+}
+
+#unlock-status strong {
+    color: var(--color-accent-gold);
+}
+
+#unlock-status button {
+    background-color: var(--color-button-secondary);
+    color: var(--color-text-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-top: var(--spacing-md);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+#unlock-status button:hover {
+    background-color: var(--color-button-secondary-hover);
+    transform: translateY(-1px);
+}
+
+/* Specific colors for unlock/fail messages */
+#unlock-status h3[style*="A88F59"] { /* Color for UNLOCKED */
+    color: hsl(90, 40%, 60%) !important; /* Brighter green-gold */
+}
+
+#unlock-status h3[style*="6B1E2B"] { /* Color for INSUFFICIENT */
+    color: hsl(0, 50%, 60%) !important; /* Muted red */
+}
+
+
+/* Hide elements initially, JavaScript will show them */
+.hidden {
+    display: none;
+}
+
+/* Special styling for the unlock button animation (pulses green for successful unlock) */
+.unlock-button {
+    animation: pulse-gold 1.8s infinite;
+    box-shadow: 0 0 15px rgba(255, 200, 0, 0.4); /* Gold glow */
+}
+
+@keyframes pulse-gold {
+    0% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 200, 0, 0.4); }
+    50% { transform: scale(1.02); box-shadow: 0 0 25px rgba(255, 200, 0, 0.7); }
+    100% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 200, 0, 0.4); }
+}
+
+/* Aftermath Strange Loop specific styling for infinity symbol */
+#unlock-status .infinity-symbol { /* Added a class for the infinity symbol to style it */
+    font-family: 'Source Serif Pro', serif;
+    font-size: 3em;
+    text-align: center;
+    margin: 20px 0;
+    color: var(--color-accent-gold);
+    animation: rotateInfinity 10s linear infinite; /* Subtle rotation */
+}
+
+@keyframes rotateInfinity {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+footer {
+    text-align: center;
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    color: var(--color-text-secondary);
+    font-size: 0.9em;
+    border-top: 1px solid var(--color-border-subtle);
+}

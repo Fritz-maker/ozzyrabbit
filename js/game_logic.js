@@ -597,6 +597,17 @@ function handleEndOfLoop() {
                     </div>
                 </div>
             </div>
+            
+            <div class="completion-actions">
+                <button onclick="returnToBeginning()" class="begin-again-btn">🔄 Investigate Again</button>
+                <a href="https://unity-loops.com/hub" class="explore-all-loops">
+                    🏛️ Explore All 6 Consciousness Loops
+                </a>
+            </div>
+            
+            <div class="frontier-motto">
+                <p>"It's Loops All the Way Down"</p>
+            </div>
         </div>
     `;
 

@@ -1,5 +1,4 @@
-alert('FILE LOADED - TIMESTAMP: ' + new Date());
-// Then the rest of the file continues...
+
 // ===== OZZYRABBIT - ENHANCED GAME LOGIC WITH ADVANCED FEATURES =====
 // This is your main game_logic.js file that handles all loops
 
@@ -8,7 +7,7 @@ const loopOrder = [
     { 
         titleIncludes: "Motorcade Route", 
         file: "motorcade.html", 
-        unlockScore: 25, 
+        unlockScore: 50, 
         isFinal: false, 
         description: "The fateful journey begins",
         thematicColor: "hsl(15, 70%, 50%)", // Blood red
@@ -17,7 +16,7 @@ const loopOrder = [
     { 
         titleIncludes: "Parkland to Arlington", 
         file: "parkland.html", 
-        unlockScore: 50,
+        unlockScore: 100,
         isFinal: false, 
         description: "From trauma to ceremony",
         thematicColor: "hsl(200, 30%, 40%)", // Somber blue
@@ -26,7 +25,7 @@ const loopOrder = [
     { 
         titleIncludes: "Oswald Escapes", 
         file: "oswald.html", 
-        unlockScore: 60, 
+        unlockScore: 120, 
         isFinal: false, 
         description: "The flight from Dealey Plaza",
         thematicColor: "hsl(45, 80%, 30%)", // Dark gold
@@ -35,7 +34,7 @@ const loopOrder = [
     { 
         titleIncludes: "Who was LHO?", 
         file: "lho.html", 
-        unlockScore: 65, 
+        unlockScore: 130, 
         isFinal: false, 
         description: "Unraveling the assassin",
         thematicColor: "hsl(280, 60%, 45%)", // Purple mystery
@@ -44,7 +43,7 @@ const loopOrder = [
     { 
         titleIncludes: "Warren Commission", 
         file: "warren.html", 
-        unlockScore: 75, 
+        unlockScore: 150, 
         isFinal: false, 
         description: "Official truth or cover-up?",
         thematicColor: "hsl(120, 40%, 35%)", // Institutional green
@@ -336,10 +335,9 @@ function displayRandomContent() {
 }
 
 function displayContent(item) {
-
     contentDisplayArea.innerHTML = '';
     houseCommentary.innerHTML = '';
-alert('DEBUG: item type = ' + (item ? item.type : 'ITEM IS NULL'));
+
     // Add contextual House commentary before content
     if (item.house_commentary) {
         houseCommentary.innerHTML = `<span class='glitch-text'>${item.house_commentary}</span>`;
@@ -350,20 +348,20 @@ alert('DEBUG: item type = ' + (item ? item.type : 'ITEM IS NULL'));
     const escapeHtml = str => (str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
     switch (item.type) {
-    case "tf_question":
-        displayTrueFalseQuestion(item, escapeHtml);
-        break;
-    case "mc_question":
-        displayMultipleChoiceQuestion(item, escapeHtml);
-        break;
-    case "video":
-        displayVideo(item);
-        break;
-    case "factoid":
-    default:
-        displayFactoid(item);
-        break;
-}
+        case "tf_question":
+            displayTrueFalseQuestion(item, escapeHtml);
+            break;
+        case "mc_question":
+            displayMultipleChoiceQuestion(item, escapeHtml);
+            break;
+        case "video":
+            displayVideo(item);
+            break;
+        case "factoid":
+        default:
+            displayFactoid(item);
+            break;
+    }
 }
 
 function displayTrueFalseQuestion(item, escapeHtml) {
@@ -389,10 +387,8 @@ function displayTrueFalseQuestion(item, escapeHtml) {
 }
 
 function displayMultipleChoiceQuestion(item, escapeHtml) {
-    alert('MC QUESTION: ' + (item.question || 'NO QUESTION PROPERTY'));
     const correctFeedback = escapeHtml(item.correct_feedback || '');
     const incorrectFeedback = escapeHtml(item.incorrect_feedback || '');
-    // ... rest of function continues
     
     let optionsHtml = '';
     for (const key in item.options) {

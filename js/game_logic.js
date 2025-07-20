@@ -644,16 +644,69 @@ function handleStrangeLoop(currentLoopData) {
                 </div>
                 
                 <div class="strange-loop-actions">
-                    <button onclick="contemplateInfinity()" class="contemplation-btn">
-                        🤔 Contemplate the Infinite
-                    </button>
-                    <button onclick="returnToBeginning()" class="return-btn">
-                        🔄 Begin the Loop Anew
-                    </button>
-                    <button onclick="shareReflection()" class="share-btn">
-                        📝 Share Your Reflection
-                    </button>
-                </div>
+    <button onclick="contemplateInfinity()" class="contemplation-btn">
+        🤔 Contemplate the Infinite
+    </button>
+    <button onclick="returnToBeginning()" class="return-btn">
+        🔄 Begin the Loop Anew
+    </button>
+    <button onclick="shareReflection()" class="share-btn">
+        📝 Share Your Reflection
+    </button>
+    <a href="https://unity-loops.com/hub" class="explore-all-loops">
+        🏛️ Explore All 6 Consciousness Loops
+    </a>
+</div>
+
+<style>
+.explore-all-loops {
+    display: inline-block;
+    background: linear-gradient(45deg, #d4af37, #ffd700);
+    color: #1a1a2e;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.explore-all-loops:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+    text-decoration: none;
+    color: #1a1a2e;
+}
+</style>
+
+<style>
+.explore-all-loops {
+    display: inline-block;
+    background: linear-gradient(45deg, #d4af37, #ffd700);
+    color: #1a1a2e;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.explore-all-loops:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+    text-decoration: none;
+    color: #1a1a2e;
+}
+</style>
             </div>
         `;
     }

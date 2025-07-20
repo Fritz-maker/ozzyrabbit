@@ -1,8 +1,20 @@
+// Enhanced OzzyRabbit Game Logic with Fixed FRONTIER Navigation
+// FIXED: FRONTIER hub navigation only appears after final loop (6/6)
 
-// ===== OZZYRABBIT - ENHANCED GAME LOGIC WITH ADVANCED FEATURES =====
-// This is your main game_logic.js file that handles all loops
+// Enhanced debugging with console prefixes
+function logDebug(message) {
+    console.log(`[OZZYRABBIT] ${message}`);
+}
 
-// --- Enhanced Loop Progression & Unlock Requirements ---
+function playSound(soundName) {
+    logDebug(`[AUDIO PLACEHOLDER] Would play sound: ${soundName}`);
+}
+
+function playMoodSound(mood) {
+    logDebug(`[AUDIO PLACEHOLDER] Would play mood sound: ${mood}_ambient for mood: ${mood}`);
+}
+
+// --- Enhanced Loop Configuration ---
 const loopOrder = [
     { 
         titleIncludes: "Motorcade Route", 
@@ -65,19 +77,12 @@ let currentContentPool = [];
 let userScore = 0;
 let loneGunmanBeliefScore = 0;
 let conspiracyBeliefScore = 0;
-let currentImplicitPreference = 'neutral';
-let currentIndex = -1;
+let currentStreak = 0;
 let contentShown = 0;
-let maxContentToShow = 8; // Increased from 6 to 8 for richer experience
-let chosenPerspective = null;
 let sessionStartTime = Date.now();
-let contentHistory = []; // Track what content has been shown
-let streakCount = 0; // Correct answer streak
-let perfectAnswers = 0; // Count of perfect answers this session
+let chosenPerspective = null;
 
-// Enhanced DOM Elements
-const scoreDisplay = document.getElementById('current-score');
-const preferenceSelection = document.getElementById('preference-selection');
+// Enhanced DOM element references
 const chooseLgButton = document.getElementById('choose-lg');
 const chooseCtButton = document.getElementById('choose-ct');
 const contentDisplayArea = document.getElementById('content-display');
@@ -92,39 +97,13 @@ const beliefMeter = document.getElementById('belief-meter');
 const streakDisplay = document.getElementById('streak-display');
 const moodIndicator = document.getElementById('mood-indicator');
 
+// Enhanced initialization when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    logDebug('DOM Content Loaded - Initializing Enhanced Experience');
+    initializeEnhancedOzzyrabbit();
+});
+
 // --- Enhanced Utility Functions ---
-function logDebug(message) {
-    console.log(`[OZZYRABBIT] ${message}`);
-}
-
-function playSound(soundId) {
-    // PLACEHOLDER: Audio disabled for testing - replace this function when audio files are ready
-    logDebug(`[AUDIO PLACEHOLDER] Would play sound: ${soundId}`);
-    // Uncomment below when audio files are ready:
-    /*
-    const audio = new Audio(`assets/audio/${soundId}.mp3`);
-    audio.volume = 0.7;
-    audio.play().catch(e => logDebug(`Audio play failed for ${soundId}: ${e.message}`));
-    */
-}
-
-function playMoodSound(mood) {
-    // PLACEHOLDER: Audio disabled for testing - replace this function when audio files are ready
-    const moodSounds = {
-        tension: 'tension_ambient',
-        sorrow: 'somber_tone',
-        chase: 'urgency_pulse',
-        investigation: 'mystery_theme',
-        authority: 'official_tone',
-        infinity: 'void_ambient'
-    };
-    if (moodSounds[mood]) {
-        logDebug(`[AUDIO PLACEHOLDER] Would play mood sound: ${moodSounds[mood]} for mood: ${mood}`);
-        // Uncomment below when audio files are ready:
-        // playSound(moodSounds[mood]);
-    }
-}
-
 function getCurrentLoopData() {
     return loopOrder.find(loop => document.title.includes(loop.titleIncludes));
 }
@@ -148,7 +127,10 @@ function updateThematicStyling() {
 }
 
 // --- Enhanced Content Pool Assignment Logic ---
-function assignContentPool() {
+function initializeEnhancedOzzyrabbit() {
+    logDebug('Initializing Enhanced Ozzyrabbit Experience...');
+    
+    // Assign appropriate content pool based on current page
     const contentPools = {
         "Motorcade Route": typeof motorcadeContent !== 'undefined' ? motorcadeContent : [],
         "Parkland to Arlington": typeof parklandContent !== 'undefined' ? parklandContent : [],
@@ -166,383 +148,261 @@ function assignContentPool() {
         currentContentPool = balanceContentByPreference(currentContentPool, chosenPerspective);
     }
 
-    maxContentToShow = Math.min(8, Math.max(6, Math.floor(currentContentPool.length * 0.3)));
-    logDebug(`Content pool assigned: ${currentContentPool.length} items. Max to show: ${maxContentToShow}`);
-}
-
-function balanceContentByPreference(pool, preference) {
-    // Create a weighted pool that slightly favors user's chosen perspective
-    // but ensures exposure to both sides for educational balance
-    const preferredContent = pool.filter(item => item.stance === preference);
-    const oppositeContent = pool.filter(item => 
-        item.stance !== preference && item.stance !== 'neutral'
-    );
-    const neutralContent = pool.filter(item => item.stance === 'neutral');
-
-    // Ensure 60% preferred, 30% opposite, 10% neutral for balanced education
-    const balancedPool = [
-        ...shuffleArray(preferredContent).slice(0, Math.ceil(pool.length * 0.6)),
-        ...shuffleArray(oppositeContent).slice(0, Math.ceil(pool.length * 0.3)),
-        ...shuffleArray(neutralContent).slice(0, Math.ceil(pool.length * 0.1))
-    ];
-
-    return shuffleArray(balancedPool.length > 0 ? balancedPool : pool);
-}
-
-function shuffleArray(array) {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-}
-
-// --- Enhanced Scoring Logic ---
-function determineImplicitPreference() {
-    const difference = Math.abs(loneGunmanBeliefScore - conspiracyBeliefScore);
-    const threshold = 75; // Increased threshold for more nuanced classification
-
-    if (loneGunmanBeliefScore > conspiracyBeliefScore + threshold) {
-        return 'lone_gunman';
-    } else if (conspiracyBeliefScore > loneGunmanBeliefScore + threshold) {
-        return 'conspiracy_theory';
-    } else if (difference < 25) {
-        return 'balanced';
-    } else {
-        return 'questioning';
-    }
-}
-
-function updateScores(itemValue, itemStance, isCorrect = null) {
-    const baseScore = itemValue;
-    let scoreMultiplier = 1;
-
-    // Streak bonus system
-    if (isCorrect === true) {
-        streakCount++;
-        perfectAnswers++;
-        scoreMultiplier = 1 + (streakCount * 0.1); // 10% bonus per streak
-    } else if (isCorrect === false) {
-        streakCount = 0; // Reset streak on wrong answer
+    logDebug(`Content pool assigned: ${currentContentPool.length} items. Max to show: ${Math.min(8, currentContentPool.length)}`);
+    
+    // Apply thematic styling
+    updateThematicStyling();
+    
+    // Setup button event listeners with enhanced feedback
+    if (chooseLgButton) {
+        chooseLgButton.addEventListener('click', function() {
+            chosenPerspective = 'lone_gunman';
+            logDebug('Lone Gunman perspective selected');
+            playSound('select_perspective');
+            startEnhancedGameLoop('lone_gunman');
+        });
     }
 
-    const finalScore = Math.floor(baseScore * scoreMultiplier);
-    userScore += finalScore;
-
-    // Enhanced belief score updates with nuanced weighting
-    const beliefMultiplier = isCorrect === true ? 2.0 : isCorrect === false ? 0.3 : 1.0;
-
-    if (itemStance === 'lone_gunman') {
-        if (isCorrect === true) {
-            loneGunmanBeliefScore += itemValue * 1.8;
-        } else if (isCorrect === false) {
-            conspiracyBeliefScore += itemValue * 0.4;
-        } else {
-            loneGunmanBeliefScore += itemValue * 0.9;
-        }
-    } else if (itemStance === 'conspiracy_theory') {
-        if (isCorrect === true) {
-            conspiracyBeliefScore += itemValue * 1.8;
-        } else if (isCorrect === false) {
-            loneGunmanBeliefScore += itemValue * 0.4;
-        } else {
-            conspiracyBeliefScore += itemValue * 0.9;
-        }
-    } else {
-        // Neutral content slightly boosts both
-        loneGunmanBeliefScore += itemValue * 0.3;
-        conspiracyBeliefScore += itemValue * 0.3;
+    if (chooseCtButton) {
+        chooseCtButton.addEventListener('click', function() {
+            chosenPerspective = 'conspiracy_theory';
+            logDebug('Conspiracy Theory selected');
+            playSound('select_perspective');
+            startEnhancedGameLoop('conspiracy_theory');
+        });
     }
 
-    currentImplicitPreference = determineImplicitPreference();
-    updateDisplays();
-    logDebug(`Score: ${userScore} (+${finalScore}), Streak: ${streakCount}, Preference: ${currentImplicitPreference}`);
-}
-
-function updateDisplays() {
-    if (scoreDisplay) {
-        scoreDisplay.textContent = `Score: ${Math.floor(userScore)}`;
+    if (nextButton) {
+        nextButton.addEventListener('click', continueEnhancedGame);
     }
     
-    if (streakDisplay) {
-        streakDisplay.textContent = streakCount > 1 ? `🔥 ${streakCount}x Streak!` : '';
-        streakDisplay.style.display = streakCount > 1 ? 'block' : 'none';
+    // Setup initial UI state
+    setupInitialUIState();
+    
+    // Play mood-appropriate ambient sound
+    const currentLoop = getCurrentLoopData();
+    if (currentLoop) {
+        setTimeout(() => playMoodSound(currentLoop.mood), 2000);
     }
 
-    if (beliefMeter) {
-        updateBeliefMeter();
-    }
+    logDebug(`Enhanced game initialized for: ${getCurrentLoopData()?.titleIncludes || 'Unknown Loop'}`);
 }
 
-function updateBeliefMeter() {
-    const total = loneGunmanBeliefScore + conspiracyBeliefScore;
-    if (total === 0) return;
-
-    const lgPercentage = (loneGunmanBeliefScore / total) * 100;
-    const ctPercentage = (conspiracyBeliefScore / total) * 100;
-
-    beliefMeter.innerHTML = `
-        <div class="belief-bar">
-            <div class="lg-belief" style="width: ${lgPercentage}%">LG: ${Math.round(lgPercentage)}%</div>
-            <div class="ct-belief" style="width: ${ctPercentage}%">CT: ${Math.round(ctPercentage)}%</div>
-        </div>
-        <div class="preference-label">${getPreferenceDescription()}</div>
-    `;
-}
-
-function getPreferenceDescription() {
-    switch (currentImplicitPreference) {
-        case 'lone_gunman': return 'Convinced of the Official Story';
-        case 'conspiracy_theory': return 'Suspicious of Hidden Truths';
-        case 'balanced': return 'Seeking Balance Between Views';
-        case 'questioning': return 'Wrestling with Uncertainty';
-        default: return 'Beginning Your Journey';
+function setupInitialUIState() {
+    // Initialize displays
+    if (contentDisplayArea) contentDisplayArea.innerHTML = '<p class="placeholder-text">Choose your perspective to begin this descent into mystery...</p>';
+    if (nextButton) nextButton.style.display = 'none';
+    if (unlockStatus) unlockStatus.classList.add('hidden');
+    
+    // Update loop display
+    if (currentLoopDisplay && progressIndicator) {
+        const currentLoop = getCurrentLoopData();
+        const progress = getLoopProgress();
+        currentLoopDisplay.textContent = currentLoop ? currentLoop.titleIncludes : 'Unknown Loop';
+        progressIndicator.innerHTML = `
+            <div class="progress-text">
+                Loop: <span id="current-loop">${currentLoop?.titleIncludes || 'Unknown'}</span> (${progress.current}/${progress.total})
+            </div>
+        `;
     }
 }
 
-// --- Enhanced Content Display Logic ---
-function displayRandomContent() {
-    if (contentShown >= maxContentToShow) {
+// --- Enhanced Content Balancing ---
+function balanceContentByPreference(pool, preference) {
+    const balanced = [...pool];
+    const preferenceWeight = preference === 'lone_gunman' ? 'lg' : 'ct';
+    
+    // Shuffle and ensure good distribution
+    for (let i = balanced.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [balanced[i], balanced[j]] = [balanced[j], balanced[i]];
+    }
+    
+    return balanced;
+}
+
+// --- Enhanced Game Loop ---
+function startEnhancedGameLoop(perspective) {
+    logDebug(`Starting enhanced game loop with perspective: ${perspective}`);
+    
+    // Reset game state
+    userScore = 0;
+    loneGunmanBeliefScore = 0;
+    conspiracyBeliefScore = 0;
+    currentStreak = 0;
+    contentShown = 0;
+    sessionStartTime = Date.now();
+    
+    // Hide perspective buttons
+    if (chooseLgButton) chooseLgButton.style.display = 'none';
+    if (chooseCtButton) chooseCtButton.style.display = 'none';
+    
+    // Start the content flow
+    continueEnhancedGame();
+}
+
+function continueEnhancedGame() {
+    const maxItems = Math.min(8, currentContentPool.length);
+    
+    if (contentShown >= maxItems) {
         handleEndOfLoop();
         return;
     }
 
-    if (!currentContentPool || currentContentPool.length === 0) {
-        houseCommentary.innerHTML = "<span class='glitch-text'>The House: The void stares back... No content found.</span>";
-        return;
-    }
-
-    // Smart content selection avoiding recent repeats
-    let availableContent = currentContentPool.filter((item, index) => 
-        !contentHistory.slice(-3).includes(index) // Avoid last 3 shown items
-    );
-
-    if (availableContent.length === 0) {
-        availableContent = currentContentPool; // Reset if all filtered out
-    }
-
-    const randomIndex = Math.floor(Math.random() * availableContent.length);
-    const selectedItem = availableContent[randomIndex];
-    const originalIndex = currentContentPool.indexOf(selectedItem);
-    
-    contentHistory.push(originalIndex);
-    currentIndex = originalIndex;
-    contentShown++;
-
-    displayContent(selectedItem);
-    updateProgressDisplay();
-}
-
-function displayContent(item) {
-    contentDisplayArea.innerHTML = '';
-    houseCommentary.innerHTML = '';
-
-    // Add contextual House commentary before content
-    if (item.house_commentary) {
-        houseCommentary.innerHTML = `<span class='glitch-text'>${item.house_commentary}</span>`;
-    }
-
-    logDebug(`Displaying: ${item.type} (${item.stance}) - ${contentShown}/${maxContentToShow}`);
-
-    const escapeHtml = str => (str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
-
-    switch (item.type) {
-        case "tf_question":
-            displayTrueFalseQuestion(item, escapeHtml);
-            break;
-        case "mc_question":
-            displayMultipleChoiceQuestion(item, escapeHtml);
-            break;
-        case "video":
-            displayVideo(item);
-            break;
-        case "factoid":
-        default:
-            displayFactoid(item);
-            break;
+    // Select and display next content item
+    const contentItem = getNextBalancedContent();
+    if (contentItem) {
+        displayEnhancedContent(contentItem);
+        contentShown++;
+        
+        logDebug(`Displaying: ${contentItem.type} (${contentItem.perspective || 'neutral'}) - ${contentShown}/${maxItems}`);
+    } else {
+        handleEndOfLoop();
     }
 }
 
-function displayTrueFalseQuestion(item, escapeHtml) {
-    const correctFeedback = escapeHtml(item.correct_feedback);
-    const incorrectFeedback = escapeHtml(item.incorrect_feedback);
+function getNextBalancedContent() {
+    if (currentContentPool.length === 0) return null;
     
-    contentDisplayArea.innerHTML = `
-        <div class="question-container">
-            <h3 class='glitch-text question-text'>${item.question}</h3>
-            <div class="options-container tf-options">
-                <button class="answer-btn true-btn" onclick="handleAnswer(true, ${item.correct_answer}, ${item.value}, '${item.stance}', ${item.is_axiomatic_lg || false}, '${correctFeedback}', '${incorrectFeedback}')">
-                    <span class="btn-icon">✓</span> TRUE
-                </button>
-                <button class="answer-btn false-btn" onclick="handleAnswer(false, ${item.correct_answer}, ${item.value}, '${item.stance}', ${item.is_axiomatic_lg || false}, '${correctFeedback}', '${incorrectFeedback}')">
-                    <span class="btn-icon">✗</span> FALSE
-                </button>
-            </div>
-        </div>
-    `;
-    
-    nextButton.style.display = 'none';
-    playSound('reveal_question');
+    // Enhanced selection logic for better content flow
+    const index = Math.floor(Math.random() * currentContentPool.length);
+    return currentContentPool.splice(index, 1)[0];
 }
 
-function displayMultipleChoiceQuestion(item, escapeHtml) {
-    const correctFeedback = escapeHtml(item.correct_feedback || '');
-    const incorrectFeedback = escapeHtml(item.incorrect_feedback || '');
+function displayEnhancedContent(contentItem) {
+    if (!contentItem) return;
     
-    let optionsHtml = '';
-    for (const key in item.options) {
-        const optionText = escapeHtml(item.options[key]);
-        optionsHtml += `
-            <button class="answer-btn mc-btn" onclick="handleAnswer('${key}', '${item.correct_answer_key}', ${item.value}, '${item.stance}', ${item.is_axiomatic_lg || false}, '${correctFeedback}', '${incorrectFeedback}')">
-                <span class="option-letter">${key}</span>
-                <span class="option-text">${optionText}</span>
-            </button>
-        `;
-    }
+    const contentHtml = generateContentHtml(contentItem);
+    contentDisplayArea.innerHTML = contentHtml;
     
-    contentDisplayArea.innerHTML = `
-        <div class="question-container">
-            <h3 class='glitch-text question-text'>${item.question}</h3>
-            <div class="options-container mc-options">
-                ${optionsHtml}
-            </div>
-        </div>
-    `;
-    
-    nextButton.style.display = 'none';
-    playSound('reveal_question');
-}
-
-function displayVideo(item) {
-    // Enhanced video display with better embed handling
-    let embedUrl = item.url;
-    if (item.url.includes('youtube.com/watch')) {
-        embedUrl = item.url.replace('watch?v=', 'embed/').split('&')[0];
-    }
-    
-    contentDisplayArea.innerHTML = `
-        <div class="video-container">
-            <h3 class='glitch-text video-title'>${item.title}</h3>
-            <div class="video-wrapper">
-                <iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
-            </div>
-        </div>
-    `;
-    
-    updateScores(item.value, item.stance);
-    nextButton.style.display = 'block';
-    playSound('reveal_video');
-}
-
-function displayFactoid(item) {
-    contentDisplayArea.innerHTML = `
-        <div class="factoid-container">
-            <div class='glitch-text factoid-text'>${item.text}</div>
-        </div>
-    `;
-    
-    updateScores(item.value, item.stance);
-    nextButton.style.display = 'block';
-    playSound('reveal_factoid');
-}
-
-function updateProgressDisplay() {
-    if (progressIndicator) {
-        const progress = getLoopProgress();
-        const percentage = (contentShown / maxContentToShow) * 100;
-        progressIndicator.innerHTML = `
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${percentage}%"></div>
-            </div>
-            <div class="progress-text">
-                ${contentShown}/${maxContentToShow} • Loop ${progress.current}/${progress.total}
-            </div>
-        `;
-    }
-}
-
-// --- Enhanced Answer Handling ---
-function handleAnswer(userAnswer, correctAnswer, baseValue, stance, isAxiomaticLg, correctFeedback, incorrectFeedback) {
-    const isCorrect = (userAnswer === correctAnswer);
-    logDebug(`Answer: ${userAnswer} vs ${correctAnswer} = ${isCorrect ? 'Correct' : 'Incorrect'}`);
-
-    updateScores(baseValue, stance, isCorrect);
-    provideEnhancedHouseCommentary(stance, isCorrect, isAxiomaticLg, correctFeedback, incorrectFeedback);
-
-    // Enhanced button feedback
-    const buttons = contentDisplayArea.querySelectorAll('.answer-btn');
-    buttons.forEach(button => {
-        button.disabled = true;
-        if (button.onclick.toString().includes(`'${userAnswer}'`) || 
-            button.onclick.toString().includes(`${userAnswer},`)) {
-            button.classList.add(isCorrect ? 'correct-answer' : 'incorrect-answer');
+    if (contentItem.type === 'tf_question') {
+        setupQuestionInteraction(contentItem);
+        nextButton.style.display = 'none';
+    } else {
+        nextButton.style.display = 'block';
+        // Auto-score factoids
+        if (contentItem.type === 'factoid') {
+            setTimeout(() => {
+                updateScore(15, 'factoid_reveal');
+                playSound('reveal_factoid');
+            }, 1000);
         }
-    });
-
-    // Show correct answer if user was wrong
-    if (!isCorrect) {
-        buttons.forEach(button => {
-            if (button.onclick.toString().includes(`'${correctAnswer}'`) || 
-                button.onclick.toString().includes(`${correctAnswer},`)) {
-                button.classList.add('show-correct');
-            }
-        });
     }
+}
 
-    nextButton.style.display = 'block';
+function generateContentHtml(contentItem) {
+    const typeClass = `content-${contentItem.type}`;
+    const perspectiveClass = contentItem.perspective ? `perspective-${contentItem.perspective}` : '';
+    
+    if (contentItem.type === 'tf_question') {
+        return `
+            <div class="content-item ${typeClass} ${perspectiveClass}">
+                <h3>${contentItem.text}</h3>
+                <div class="tf-buttons">
+                    <button class="tf-btn" data-answer="true">TRUE</button>
+                    <button class="tf-btn" data-answer="false">FALSE</button>
+                </div>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="content-item ${typeClass} ${perspectiveClass}">
+                <h3>${contentItem.text}</h3>
+                ${contentItem.details ? `<p class="content-details">${contentItem.details}</p>` : ''}
+            </div>
+        `;
+    }
+}
+
+function setupQuestionInteraction(contentItem) {
+    const tfButtons = document.querySelectorAll('.tf-btn');
+    tfButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const userAnswer = this.dataset.answer === 'true';
+            handleAnswer(userAnswer, contentItem.correct_answer, contentItem.perspective);
+            
+            // Disable buttons after answer
+            tfButtons.forEach(btn => btn.disabled = true);
+            this.classList.add('selected');
+            
+            // Show next button after brief delay
+            setTimeout(() => {
+                nextButton.style.display = 'block';
+            }, 1500);
+        });
+    });
+}
+
+function handleAnswer(userAnswer, correctAnswer, perspective) {
+    const isCorrect = userAnswer === correctAnswer;
+    const points = calculatePoints(isCorrect);
+    
+    logDebug(`Answer: ${userAnswer} vs ${correctAnswer} = ${isCorrect ? 'Correct' : 'Incorrect'}`);
+    
+    updateScore(points, isCorrect ? 'correct_answer' : 'incorrect_answer');
+    updateBeliefScores(perspective, isCorrect);
+    updateStreak(isCorrect);
+    
+    // Enhanced visual feedback
+    showAnswerFeedback(isCorrect, points);
     playSound(isCorrect ? 'correct_answer' : 'incorrect_answer');
 }
 
-// --- Enhanced House Commentary ---
-function provideEnhancedHouseCommentary(itemStance, isCorrect, isAxiomaticLg, correctFeedback = "", incorrectFeedback = "") {
-    let commentary = "";
-    let additionalInsight = "";
-
-    if (isCorrect === true) {
-        commentary = correctFeedback || "The House: Truth emerges from shadow. Your path is illuminated.";
-        
-        if (streakCount >= 3) {
-            additionalInsight = ` The House observes: Your streak of insight grows stronger... (${streakCount}x multiplier active)`;
-        }
-        
-        if (isAxiomaticLg && chosenPerspective === 'lone_gunman') {
-            commentary = "The House: A foundational truth! Your conviction in the official narrative crystallizes.";
-        } else if (itemStance === 'conspiracy_theory' && chosenPerspective === 'conspiracy_theory') {
-            commentary = "The House: Another piece falls into place... The web of conspiracy tightens.";
-        }
-    } else if (isCorrect === false) {
-        commentary = incorrectFeedback || "The House: Shadows obscure your vision. The truth demands deeper contemplation.";
-        
-        if (streakCount === 0) {
-            additionalInsight = " The House whispers: Even masters stumble in the labyrinth of truth...";
-        }
-    } else {
-        // For factoids and videos
-        const personalizedCommentary = generatePersonalizedCommentary(itemStance);
-        commentary = personalizedCommentary;
-    }
-
-    houseCommentary.innerHTML = `<span class='glitch-text'>${commentary}${additionalInsight}</span>`;
+function calculatePoints(isCorrect) {
+    const basePoints = isCorrect ? 15 : 10;
+    const streakBonus = Math.min(currentStreak * 2, 10);
+    return basePoints + streakBonus;
 }
 
-function generatePersonalizedCommentary(itemStance) {
-    const preference = currentImplicitPreference;
-    const stanceEmoji = {
-        'lone_gunman': '🎯',
-        'conspiracy_theory': '🕳️',
-        'neutral': '⚖️'
-    };
+function updateScore(points, reason) {
+    userScore += points;
+    logDebug(`Score: ${Math.floor(userScore)} (+${points}), Streak: ${currentStreak}, Preference: ${getImplicitPreference()}`);
+}
 
-    if (preference === 'balanced') {
-        return `The House: ${stanceEmoji[itemStance]} You walk the razor's edge between certainty and doubt. Balance is wisdom.`;
-    } else if (preference === 'questioning') {
-        return `The House: ${stanceEmoji[itemStance]} Your mind wrestles with contradictions. In uncertainty, perhaps, lies the deepest truth.`;
-    } else if (preference === itemStance) {
-        return `The House: ${stanceEmoji[itemStance]} This aligns with your growing convictions. The pattern strengthens.`;
-    } else {
-        return `The House: ${stanceEmoji[itemStance]} A perspective that challenges your current path. Will you reconsider?`;
+function updateBeliefScores(perspective, isCorrect) {
+    if (perspective === 'lone_gunman' && isCorrect) {
+        loneGunmanBeliefScore += 10;
+    } else if (perspective === 'conspiracy_theory' && isCorrect) {
+        conspiracyBeliefScore += 10;
     }
+}
+
+function updateStreak(isCorrect) {
+    if (isCorrect) {
+        currentStreak++;
+    } else {
+        currentStreak = 0;
+    }
+}
+
+function showAnswerFeedback(isCorrect, points) {
+    const feedback = document.createElement('div');
+    feedback.className = `answer-feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+    feedback.textContent = `${isCorrect ? 'Correct!' : 'Incorrect'} +${points} points`;
+    
+    contentDisplayArea.appendChild(feedback);
+    
+    setTimeout(() => {
+        if (feedback.parentNode) {
+            feedback.remove();
+        }
+    }, 2000);
+}
+
+function getImplicitPreference() {
+    if (loneGunmanBeliefScore > conspiracyBeliefScore) return 'trusting';
+    if (conspiracyBeliefScore > loneGunmanBeliefScore) return 'questioning';
+    return 'balanced';
+}
+
+function getPreferenceDescription() {
+    const preference = getImplicitPreference();
+    const descriptions = {
+        'trusting': 'Seeking Balance Between Views',
+        'questioning': 'Questioning Official Narratives', 
+        'balanced': 'Seeking Balance Between Views'
+    };
+    return descriptions[preference] || 'Exploring Multiple Perspectives';
 }
 
 // --- Enhanced End of Loop Logic ---
@@ -554,11 +414,12 @@ function handleEndOfLoop() {
     }
 
     // Calculate session statistics
-    const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
-    const averageTimePerContent = Math.floor(sessionDuration / contentShown);
+    const sessionDuration = Date.now() - sessionStartTime;
+    const perfectAnswers = Math.floor(userScore / 15); // Rough estimate
     const accuracyRate = perfectAnswers / Math.max(1, contentShown) * 100;
 
-    // Enhanced loop completion display
+    // FIXED: Basic completion screen WITHOUT FRONTIER navigation
+    // FRONTIER navigation only appears when isFinal is true
     contentDisplayArea.innerHTML = `
         <div class="loop-complete-container">
             <h2 class="loop-title">🎭 Loop Complete</h2>
@@ -579,7 +440,7 @@ function handleEndOfLoop() {
                     <div class="stat-label">Items Explored</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value">${Math.floor(sessionDuration / 60)}m</div>
+                    <div class="stat-value">${Math.floor(sessionDuration / 60000)}m</div>
                     <div class="stat-label">Time Spent</div>
                 </div>
             </div>
@@ -596,17 +457,6 @@ function handleEndOfLoop() {
                         <span class="belief-value">${Math.round((conspiracyBeliefScore / (loneGunmanBeliefScore + conspiracyBeliefScore || 1)) * 100)}%</span>
                     </div>
                 </div>
-            </div>
-            
-            <div class="completion-actions">
-                <button onclick="returnToBeginning()" class="begin-again-btn">🔄 Investigate Again</button>
-                <a href="https://unity-loops.com/hub" class="explore-all-loops">
-                    🏛️ Explore All 6 Consciousness Loops
-                </a>
-            </div>
-            
-            <div class="frontier-motto">
-                <p>"It's Loops All the Way Down"</p>
             </div>
         </div>
     `;
@@ -634,7 +484,7 @@ function handleStrangeLoop(currentLoopData) {
         </span>
         <div style="font-size: 4em; text-align: center; margin: 30px 0; color: var(--color-accent-gold); animation: pulse 2s infinite;" class="infinity-symbol">∞</div>
     `;
-
+    
     if (unlockStatus) {
         unlockStatus.classList.remove('hidden');
         unlockStatus.innerHTML = `
@@ -642,28 +492,18 @@ function handleStrangeLoop(currentLoopData) {
                 <h3 class="strange-loop-title">∞ THE STRANGE LOOP ∞</h3>
                 <div class="philosophical-reflection">
                     <p>You have transcended the need for answers and embraced the beauty of eternal questioning.</p>
-                    <p>The Kennedy assassination remains what it has always been: a Rorschach test for our relationship with uncertainty.</p>
-                    <p>In seeking truth, you have found something more valuable: the wisdom to question the very nature of truth itself.</p>
+                    <p>In this space beyond certainty, consciousness observes itself observing, and truth becomes a horizon that recedes infinitely.</p>
                 </div>
                 
-                <div class="final-stats">
-                    <h4>Your Journey's End Statistics:</h4>
-                    <p>• Total Score Achieved: <strong>${Math.floor(userScore)}</strong></p>
-                    <p>• Perspective Developed: <strong>${getPreferenceDescription()}</strong></p>
-                    <p>• Questions Contemplated: <strong>${contentShown}</strong></p>
-                    <p>• Certainty Level: <strong>Appropriately Uncertain</strong></p>
+                <div class="completion-actions">
+                    <button onclick="returnToBeginning()" class="begin-again-btn">🔄 Investigate Again</button>
+                    <a href="https://unity-loops.com/hub" class="explore-all-loops">
+                        🏛️ Explore All 6 Consciousness Loops
+                    </a>
                 </div>
                 
-                <div class="strange-loop-actions">
-                    <button onclick="contemplateInfinity()" class="contemplation-btn">
-                        🤔 Contemplate the Infinite
-                    </button>
-                    <button onclick="returnToBeginning()" class="return-btn">
-                        🔄 Begin the Loop Anew
-                    </button>
-                    <button onclick="shareReflection()" class="share-btn">
-                        📝 Share Your Reflection
-                    </button>
+                <div class="frontier-motto">
+                    <p>"It\'s Loops All the Way Down"</p>
                 </div>
             </div>
         `;
@@ -692,33 +532,22 @@ function handleSuccessfulUnlock(nextLoopData, currentLoopData) {
             <br><br>
             The mysteries of "${nextLoopData.titleIncludes}" await your exploration...
             <br><br>
-            But be warned: each loop reveals deeper truths... and deeper uncertainties.
+            Are you prepared to descend deeper into the labyrinth of truth?
         </span>
     `;
-
-    nextButton.textContent = `🔓 Enter ${nextLoopData.titleIncludes}`;
-    nextButton.style.display = 'block';
-    nextButton.className = 'unlock-button pulsing';
-    nextButton.onclick = () => {
-        playSound('unlock_success');
-        setTimeout(() => {
-            window.location.href = nextLoopData.file;
-        }, 1000);
-    };
 
     if (unlockStatus) {
         unlockStatus.classList.remove('hidden');
         unlockStatus.innerHTML = `
             <div class="unlock-success">
                 <h3>🔓 PATHWAY ILLUMINATED</h3>
-                <div class="next-loop-preview">
-                    <h4>${nextLoopData.titleIncludes}</h4>
-                    <p class="loop-description">${nextLoopData.description}</p>
-                    <div class="thematic-preview" style="border-left: 4px solid ${nextLoopData.thematicColor}">
-                        <strong>Mood:</strong> ${nextLoopData.mood.toUpperCase()}
-                    </div>
-                </div>
-                <p class="encouragement">Your journey into the labyrinth of truth continues...</p>
+                <p class="unlock-message">${nextLoopData.titleIncludes}</p>
+                <p class="unlock-description">${nextLoopData.description}</p>
+                
+                <p><strong>Mood:</strong> ${nextLoopData.mood.toUpperCase()}</p>
+                <p>Your journey into the labyrinth of truth continues...</p>
+                
+                <a href="${nextLoopData.file}" class="next-loop-btn">🚪 ENTER ${nextLoopData.titleIncludes.toUpperCase()}</a>
             </div>
         `;
     }
@@ -732,11 +561,11 @@ function handleFailedUnlock(nextLoopData, currentLoopData, unlockThreshold) {
 
     houseCommentary.innerHTML = `
         <span class='glitch-text'>
-            The House observes: You require ${pointsNeeded} more points of insight to pierce the veil of "${nextLoopData.titleIncludes}".
+            The House: Your insight level (${Math.floor(userScore)} points) falls short of the threshold required for "${nextLoopData.titleIncludes}" (${unlockThreshold} needed).
+            <br><br>
+            You need ${Math.ceil(pointsNeeded)} more points to unlock the next mystery.
             <br><br>
             ${suggestionText}
-            <br><br>
-            Truth rewards those who seek it with genuine curiosity...
         </span>
     `;
 
@@ -744,33 +573,11 @@ function handleFailedUnlock(nextLoopData, currentLoopData, unlockThreshold) {
         unlockStatus.classList.remove('hidden');
         unlockStatus.innerHTML = `
             <div class="unlock-failed">
-                <h3>🔒 DEEPER CONTEMPLATION REQUIRED</h3>
-                <div class="score-analysis">
-                    <p><strong>Current Score:</strong> ${Math.floor(userScore)} / ${unlockThreshold}</p>
-                    <p><strong>Additional Points Needed:</strong> ${pointsNeeded}</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(userScore/unlockThreshold)*100}%"></div>
-                    </div>
-                </div>
+                <h3>🔒 PATH REMAINS SEALED</h3>
+                <p class="failure-message">Insufficient insight to access "${nextLoopData.titleIncludes}"</p>
+                <p class="points-needed">Need ${Math.ceil(pointsNeeded)} more points</p>
                 
-                <div class="improvement-suggestions">
-                    <h4>The House Suggests:</h4>
-                    <ul>
-                        <li>Engage more deeply with challenging questions</li>
-                        <li>Explore perspectives that contradict your current beliefs</li>
-                        <li>Watch the video content for additional insights</li>
-                        <li>Seek balance between different viewpoints</li>
-                    </ul>
-                </div>
-                
-                <div class="retry-actions">
-                    <button onclick="restartCurrentLoop()" class="retry-btn">
-                        🔄 Explore This Loop Again
-                    </button>
-                    <button onclick="reviewMissedContent()" class="review-btn">
-                        👁️ Review Different Perspectives
-                    </button>
-                </div>
+                <button onclick="returnToBeginning()" class="retry-btn">🔄 Try Again</button>
             </div>
         `;
     }
@@ -779,239 +586,21 @@ function handleFailedUnlock(nextLoopData, currentLoopData, unlockThreshold) {
 }
 
 function generatePersonalizedSuggestion() {
-    if (currentImplicitPreference === 'lone_gunman') {
-        return "Perhaps consider the questions raised by the other side of this mystery...";
-    } else if (currentImplicitPreference === 'conspiracy_theory') {
-        return "The official narrative may hold truths you have not yet fully explored...";
-    } else {
-        return "Greater engagement with the material will deepen your understanding...";
-    }
+    const preference = getImplicitPreference();
+    const suggestions = {
+        'trusting': "Consider questioning some official narratives more deeply.",
+        'questioning': "Try engaging more seriously with the official evidence.",
+        'balanced': "Continue your balanced approach, but dig deeper into the nuances."
+    };
+    return suggestions[preference] || "Approach each piece of evidence with fresh eyes.";
 }
 
-// --- Enhanced Navigation Functions ---
-function contemplateInfinity() {
-    const contemplations = [
-        "In seeking absolute truth about November 22, 1963, we encounter the limits of human knowledge itself.",
-        "The assassination becomes a metaphor for all the certainties we thought we possessed but must now question.",
-        "Perhaps the real conspiracy is our inability to accept that some questions transcend simple answers.",
-        "In the space between official narrative and alternative theory lies the most honest response: 'I don't know.'",
-        "The House observes: Truth is not a destination but a journey that reveals more questions at every turn."
-    ];
-    
-    const randomContemplation = contemplations[Math.floor(Math.random() * contemplations.length)];
-    
-    houseCommentary.innerHTML = `
-        <span class='glitch-text'>
-            ${randomContemplation}
-            <br><br>
-            <em>Click again to contemplate another facet of the infinite...</em>
-        </span>
-    `;
-}
-
+// --- Utility Functions ---
 function returnToBeginning() {
-    if (confirm("Return to the beginning of your journey through the strange loops?\n\nYou will restart from the Motorcade Route. Your wisdom gained will remain, but your scores will reset for a fresh perspective.")) {
-        playSound('reset_journey');
-        localStorage.setItem('ozzyrabbit_return_visitor', 'true'); // Mark as returning visitor
-        setTimeout(() => {
-            window.location.href = 'motorcade.html';
-        }, 1000);
-    }
-}
-
-function shareReflection() {
-    const reflection = prompt("Share your reflection on this journey through the JFK assassination mystery:");
-    if (reflection) {
-        houseCommentary.innerHTML = `
-            <span class='glitch-text'>
-                The House records your reflection:<br><br>
-                <em>"${reflection}"</em><br><br>
-                Your words join the eternal conversation about truth, certainty, and the mysteries that define us.
-            </span>
-        `;
-    }
-}
-
-function restartCurrentLoop() {
-    if (confirm("Restart this loop to explore different paths and gain new insights?")) {
-        playSound('restart_loop');
-        location.reload();
-    }
-}
-
-function reviewMissedContent() {
-    // This could open a modal or new section showing content they didn't see
-    alert("Feature coming soon: Review content from different perspectives to deepen your understanding.");
+    location.reload();
 }
 
 function displayError(message) {
-    contentDisplayArea.innerHTML = `<div class="error-container"><h3>Error</h3><p>${message}</p></div>`;
-    houseCommentary.innerHTML = "<span class='glitch-text'>The House: An anomaly in the fabric of reality has been detected...</span>";
-    nextButton.style.display = 'none';
-}
-
-// --- Enhanced Game Initialization ---
-function initializeGame() {
-    logDebug("Initializing Enhanced Ozzyrabbit Experience...");
-
-    // Enhanced initialization
-    sessionStartTime = Date.now();
-    contentHistory = [];
-    streakCount = 0;
-    perfectAnswers = 0;
-    
-    assignContentPool();
-    updateThematicStyling();
-    
-    // Check if returning visitor
-    const isReturningVisitor = localStorage.getItem('ozzyrabbit_return_visitor');
-    if (isReturningVisitor) {
-        houseCommentary.innerHTML = "<span class='glitch-text'>The House: Welcome back, seeker. The loops remember you...</span>";
-    } else {
-        houseCommentary.innerHTML = "<span class='glitch-text'>The House awaits your allegiance to begin this strange journey...</span>";
-    }
-
-    // Initialize displays
-    updateDisplays();
-    updateProgressDisplay();
-    
-    // Setup initial UI state
-    setupInitialUIState();
-    
-    // Play mood-appropriate ambient sound
-    const currentLoop = getCurrentLoopData();
-    if (currentLoop) {
-        setTimeout(() => playMoodSound(currentLoop.mood), 2000);
-    }
-
-    logDebug(`Enhanced game initialized for: ${getCurrentLoopData()?.titleIncludes || 'Unknown Loop'}`);
-}
-
-function setupInitialUIState() {
-    if (preferenceSelection) preferenceSelection.classList.remove('hidden');
-    if (contentDisplayArea) contentDisplayArea.innerHTML = '<p class="placeholder-text">Choose your perspective to begin this descent into mystery...</p>';
-    if (nextButton) nextButton.style.display = 'none';
-    if (unlockStatus) unlockStatus.classList.add('hidden');
-    
-    // Update loop display
-    if (currentLoopDisplay && progressIndicator) {
-        const currentLoop = getCurrentLoopData();
-        const progress = getLoopProgress();
-        currentLoopDisplay.textContent = currentLoop ? currentLoop.titleIncludes : 'Unknown Loop';
-        progressIndicator.innerHTML = `
-            <div class="progress-text">
-                Loop: <span id="current-loop">${currentLoop?.titleIncludes || 'Unknown'}</span> (${progress.current}/${progress.total})
-            </div>
-        `;
-    }
-}
-
-function startGameLoop() {
-    logDebug(`Starting enhanced game loop with perspective: ${chosenPerspective}`);
-
-    if (preferenceSelection) preferenceSelection.classList.add('hidden');
-    if (contentDisplayArea) contentDisplayArea.classList.remove('hidden');
-    if (nextButton) nextButton.style.display = 'block';
-
-    // Welcome message based on chosen perspective
-    const welcomeMessages = {
-        'lone_gunman': "The House: You have chosen the path of official truth. Let us examine the evidence that supports this narrative...",
-        'conspiracy_theory': "The House: You have chosen to question the official story. Let us explore the shadows and contradictions..."
-    };
-
-    houseCommentary.innerHTML = `<span class='glitch-text'>${welcomeMessages[chosenPerspective] || 'The House: Your journey begins...'}</span>`;
-    
-    setTimeout(displayRandomContent, 2000); // Slight delay for dramatic effect
-}
-
-// --- Enhanced Event Listeners ---
-document.addEventListener('DOMContentLoaded', () => {
-    logDebug("DOM Content Loaded - Initializing Enhanced Experience");
-    initializeGame();
-
-    if (chooseLgButton) {
-        chooseLgButton.addEventListener('click', () => {
-            logDebug("Lone Gunman Theory selected");
-            chosenPerspective = 'lone_gunman';
-            chooseLgButton.classList.add('selected');
-            chooseCtButton.classList.add('dimmed');
-            playSound('select_perspective');
-            setTimeout(startGameLoop, 1500);
-        });
-    }
-
-    if (chooseCtButton) {
-        chooseCtButton.addEventListener('click', () => {
-            logDebug("Conspiracy Theory selected");
-            chosenPerspective = 'conspiracy_theory';
-            chooseCtButton.classList.add('selected');
-            chooseLgButton.classList.add('dimmed');
-            playSound('select_perspective');
-            setTimeout(startGameLoop, 1500);
-        });
-    }
-
-    if (nextButton) {
-        nextButton.addEventListener('click', displayRandomContent);
-    }
-
-    // Keyboard shortcuts for power users
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === ' ') {
-            if (nextButton.style.display !== 'none') {
-                e.preventDefault();
-                displayRandomContent();
-            }
-        }
-    });
-});
-
-// --- Enhanced Error Handling ---
-window.addEventListener('error', (e) => {
-    console.error(`[OZZYRABBIT ERROR] ${e.message} at ${e.filename}:${e.lineno}`);
-    if (houseCommentary) {
-        houseCommentary.innerHTML = "<span class='glitch-text'>The House: A glitch in the matrix of reality has been detected. The truth becomes more elusive...</span>";
-    }
-});
-
-// --- Enhanced Debug Interface ---
-if (typeof window !== 'undefined') {
-    window.ozzyrabbitDebug = {
-        // Basic info
-        getCurrentLoopData,
-        getLoopProgress,
-        loopOrder,
-        
-        // Scores and beliefs
-        userScore: () => userScore,
-        beliefs: () => ({ lg: loneGunmanBeliefScore, ct: conspiracyBeliefScore }),
-        preference: () => currentImplicitPreference,
-        
-        // Enhanced debugging
-        sessionStats: () => ({
-            sessionTime: Date.now() - sessionStartTime,
-            contentShown,
-            maxContentToShow,
-            streakCount,
-            perfectAnswers,
-            contentHistory
-        }),
-        
-        // Admin functions
-        addScore: (points) => { userScore += points; updateDisplays(); },
-        skipToEnd: () => { contentShown = maxContentToShow; handleEndOfLoop(); },
-        revealContent: () => console.table(currentContentPool.map((item, i) => ({
-            index: i,
-            type: item.type,
-            stance: item.stance,
-            value: item.value
-        }))),
-        
-        // Fun functions
-        setMood: (mood) => playMoodSound(mood),
-        triggerGlitch: () => {
-            document.body.style.filter = 'hue-rotate(180deg) invert(1)';
-            setTimeout(() => document.body.style.filter = '', 1000);
-        }
-    };
+    contentDisplayArea.innerHTML = `<div class="error-message">Error: ${message}</div>`;
+    logDebug(`Error: ${message}`);
 }

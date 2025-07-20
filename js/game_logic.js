@@ -350,20 +350,20 @@ alert('DEBUG: item type = ' + (item ? item.type : 'ITEM IS NULL'));
     const escapeHtml = str => (str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
     switch (item.type) {
-        case "tf_question":
-            displayTrueFalseQuestion(item, escapeHtml);
-            break;
-        case "mc_question":
-            displayMultipleChoiceQuestion(item, escapeHtml);
-            break;
-        case "video":
-            displayVideo(item);
-            break;
-        case "factoid":
-        default:
-            displayFactoid(item);
-            break;
-    }
+    case "tf_question":
+        displayTrueFalseQuestion(item, escapeHtml);
+        break;
+    case "mc_question":
+        displayMultipleChoiceQuestion(item, escapeHtml);
+        break;
+    case "video":
+        displayVideo(item);
+        break;
+    case "factoid":
+    default:
+        displayFactoid(item);
+        break;
+}
 }
 
 function displayTrueFalseQuestion(item, escapeHtml) {
@@ -389,8 +389,10 @@ function displayTrueFalseQuestion(item, escapeHtml) {
 }
 
 function displayMultipleChoiceQuestion(item, escapeHtml) {
+    alert('MC QUESTION: ' + (item.question || 'NO QUESTION PROPERTY'));
     const correctFeedback = escapeHtml(item.correct_feedback || '');
     const incorrectFeedback = escapeHtml(item.incorrect_feedback || '');
+    // ... rest of function continues
     
     let optionsHtml = '';
     for (const key in item.options) {
